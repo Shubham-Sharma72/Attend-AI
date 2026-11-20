@@ -50,8 +50,21 @@ for d in (KNOWN_FACES_DIR, COURSE_IMAGES_DIR, ATTENDANCE_DIR, DATA_DIR):
 # Two separate databases, one per organisation (see orgs.py):
 #   DATABASE_URL        Seemanta Engineering College   (database "attendai")
 #   ITHUB_DATABASE_URL  Aakansha IT Hub                (database "attendai_ithub")
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql+psycopg2://attendai:attendai@localhost:5432/attendai")
+def _sqlalchemy_url(url):
+    """Force the psycopg2 driver. SQLAlchemy 2.1 defaults postgresql:// to
+    psycopg (v3), which isn't installed; the project ships psycopg2-binary.
+    Also accepts the postgres:// spelling used by some hosts (Render)."""
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql+psycopg://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql+psycopg://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg2://" + url[len("postgresql://"):]
+    return url
+
+
+DATABASE_URL = _sqlalchemy_url(os.environ.get(
+    "DATABASE_URL", "postgresql+psycopg2://attendai:attendai@localhost:5432/attendai"))
 
 
 def _sibling_db(url, suffix):
@@ -61,7 +74,8 @@ def _sibling_db(url, suffix):
     return f"{head}/{name}{suffix}{q}{query}"
 
 
-ITHUB_DATABASE_URL = os.environ.get("ITHUB_DATABASE_URL") or _sibling_db(DATABASE_URL, "_ithub")
+ITHUB_DATABASE_URL = _sqlalchemy_url(
+    os.environ.get("ITHUB_DATABASE_URL") or _sibling_db(DATABASE_URL, "_ithub"))
 
 FRONTEND_ORIGINS = [o.strip() for o in os.environ.get(
     "FRONTEND_ORIGINS",
