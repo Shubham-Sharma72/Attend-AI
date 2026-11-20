@@ -17,6 +17,22 @@ from app import create_app
 from models import DatabaseMissing
 
 
+class CloudflareClientIP:
+    """Render sits behind Cloudflare, which puts the real visitor IP in
+    CF-Connecting-IP (and True-Client-IP). Waitress cannot read those, so copy
+    the value into REMOTE_ADDR. X-Forwarded-For is not used because Render only
+    appends to it, so its leftmost value can be faked by the visitor."""
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        ip = environ.get("HTTP_CF_CONNECTING_IP") or environ.get("HTTP_TRUE_CLIENT_IP")
+        if ip:
+            environ["REMOTE_ADDR"] = ip.strip()
+        return self.app(environ, start_response)
+
+
 def main():
     if config.already_running():
         print(config.ALREADY_RUNNING_HELP)
@@ -29,6 +45,8 @@ def main():
     except OperationalError as exc:
         print("Can't connect to PostgreSQL. Is it running?  Details:", exc.orig or exc)
         sys.exit(1)
+    if config.TRUST_PROXY:
+        application.wsgi_app = CloudflareClientIP(application.wsgi_app)
     if not (config.FRONTEND_DIST / "index.html").is_file():
         print("Note: frontend/dist not found. Run  npm run build  in the frontend folder.")
     print("=" * 56)
