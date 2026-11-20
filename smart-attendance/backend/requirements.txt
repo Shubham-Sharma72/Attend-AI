@@ -17,7 +17,7 @@ defusedxml>=0.7     # openpyxl uses it to block "XML bomb" files in uploads
 
 # Face recognition
 numpy
-opencv-python
+opencv-python-headless
 imutils
 scipy
 Pillow

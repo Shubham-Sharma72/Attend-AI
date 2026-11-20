@@ -208,7 +208,7 @@ def status():
 def setup():
     """Creates the first admin. Only works while there is no admin yet, and only
     from the PC itself, so nobody on the internet can grab a new install first."""
-    if request.remote_addr not in ("127.0.0.1", "::1"):
+    if request.remote_addr not in ("127.0.0.1", "::1") and not config.ALLOW_REMOTE_SETUP:
         return fail("Create the first admin on the AttendAI computer itself (http://localhost:5000).", 403)
     d = request.get_json(silent=True) or {}
     username, password = str(d.get("username") or "").strip(), str(d.get("password") or "")

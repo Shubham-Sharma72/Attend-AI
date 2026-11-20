@@ -144,5 +144,13 @@ FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 # The tunnel tells us each visitor's real IP; without this every visitor would
 # look like 127.0.0.1 and one person's wrong passwords would lock out everyone.
 BEHIND_TUNNEL = os.environ.get("BEHIND_TUNNEL", "0") == "1"
+# 1 when a hosting platform (Render/Railway/Fly) puts its own proxy in front of
+# the app. The proxy adds the visitor's real IP; trusting it keeps login locks
+# per visitor and lets the app know the request arrived over HTTPS.
+TRUST_PROXY = os.environ.get("TRUST_PROXY", "0") == "1"
 # The public address, e.g. https://attendai-pc.tail1234.ts.net (used in messages).
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "").strip().rstrip("/")
+# First admin on a hosted copy: there is no "this PC" to create it from, so the
+# setup screen is opened on the internet. It still works only while no admin
+# exists, so set it back to 0 after creating the account.
+ALLOW_REMOTE_SETUP = os.environ.get("ALLOW_REMOTE_SETUP", "0") == "1"

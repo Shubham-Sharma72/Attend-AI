@@ -48,6 +48,12 @@ def main():
                           clear_untrusted_proxy_headers=True)
         else:
             print("BEHIND_TUNNEL=1 ignored: HOST must be 127.0.0.1 when a tunnel is used.")
+    elif config.TRUST_PROXY:
+        # Render/Railway/Fly: the platform proxy is the only way in, so trust
+        # its X-Forwarded-For/Proto headers (one proxy hop).
+        tunnel = dict(trusted_proxy="*", trusted_proxy_count=1,
+                      trusted_proxy_headers="x-forwarded-for x-forwarded-proto",
+                      clear_untrusted_proxy_headers=True)
     serve(application, host=config.HOST, port=config.PORT, threads=32,
           connection_limit=200, channel_timeout=120, ident="AttendAI", **tunnel)
 
